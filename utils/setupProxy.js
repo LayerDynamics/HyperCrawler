@@ -1,7 +1,14 @@
 // ./utils/setupProxy.js
+/**
+ * @module setupProxy
+ */
+
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
-// Function to set up proxy middleware for your application
+/**
+ * Function to set up proxy middleware for your application.
+ * @param {Object} app - The express app instance.
+ */
 function setupProxies(app) {
     // Proxying API scrape requests
     app.use('/api/scrape', (req, res, next) => {

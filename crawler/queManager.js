@@ -1,10 +1,26 @@
+// ./crawler/queManager
+/**
+ * @module queManager
+ */
+
 const Queue = require('bull');
 const { fetchAndProcessURL } = require('./yourScrapingModule'); // Adjust with your actual scraping module
 const { getEmbeddings } = require('./loadUSE');
 const { adjustScrapingQueue } = require('./adjustScrapingQueue'); // Function we discussed earlier
 
+/**
+ * Queue for managing scraping tasks.
+ * @type {Queue}
+ */
 const scrapeQueue = new Queue('scrape tasks', 'redis://127.0.0.1:6379');
 
+/**
+ * Processes scraping jobs from the queue.
+ * @function
+ * @name processScrapeJob
+ * @param {Object} job - The job to process.
+ * @returns {Promise<Object[]>} A promise that resolves with the scraped data.
+ */
 scrapeQueue.process(async (job) => {
     // Handle the job: fetch URL, scrape, and process data
     const scrapedData = await fetchAndProcessURL(job.data.url);
@@ -26,6 +42,13 @@ scrapeQueue.process(async (job) => {
     return scrapedData; // Return the result for logging or further processing
 });
 
+/**
+ * Adds a scraping job to the queue.
+ * @function
+ * @name addScrapingJob
+ * @param {string} url - The URL to scrape.
+ * @param {string} [priority='normal'] - The priority of the job. Can be 'high', 'normal', or 'low'.
+ */
 function addScrapingJob(url, priority = 'normal') {
     scrapeQueue.add(
         { url },
@@ -43,4 +66,4 @@ function addScrapingJob(url, priority = 'normal') {
 // Example usage:
 // addScrapingJob('http://example.com', 'high');
 
-module.exports = { scrapeQue }
+module.exports = { scrapeQueue };

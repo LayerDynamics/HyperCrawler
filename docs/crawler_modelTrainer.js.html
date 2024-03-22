@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: crawler/modelTrainer.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: crawler/modelTrainer.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// ./crawler/modelTrainer.js
+/**
+ * @module modelTrainer
+ */
+
+const { preprocessUrls, preprocessNewData } = require('./data-prepare');
+const Feedback = require('../models/feedbackModel');
+const { updateDatasetWithFeedback, retrainModel } = require('./modelTrainingUtilities');
+
+// Default to CPU version
+let tf = require('@tensorflow/tfjs-node');
+
+/**
+ * Initializes TensorFlow.js, dynamically switching to GPU version if available.
+ * @async
+ * @function initializeTensorFlow
+ * @returns {Promise&lt;import('@tensorflow/tfjs-node-gpu') | typeof import('@tensorflow/tfjs-node')>} A promise that resolves with TensorFlow.js instance.
+ */
+async function initializeTensorFlow() {
+    try {
+        const gpuVersion = require('@tensorflow/tfjs-node-gpu');
+        if (await gpuVersion.tf.backend().isGPUSupported) {
+            console.log('Using TensorFlow.js with GPU support.');
+            return gpuVersion;
+        } else {
+            throw new Error('GPU support not available.');
+        }
+    } catch (error) {
+        console.log('GPU support not available, using CPU version of TensorFlow.js.');
+        return tf; // Return the already imported CPU version
+    }
+}
+
+(async () => {
+    tf = await initializeTensorFlow();
+})();
+
+/**
+ * Creates a neural network model for training.
+ * @function createModel
+ * @param {number} inputShape - The shape of the input data.
+ */
+function createModel(inputShape) {
+    const model = tf.sequential();
+    model.add(tf.layers.dense({units: 128, activation: 'relu', inputShape: [inputShape]}));
+    model.add(tf.layers.dropout(0.5)); // Dropout layer
+    model.add(tf.layers.dense({units: 64, activation: 'relu'}));
+    model.add(tf.layers.dense({units: 2, activation: 'softmax'}));
+}
+
+/**
+ * Trains the provided model with input and output data.
+ * @async
+ * @function trainModel
+ * @param {tf.Sequential} model - The neural network model to train.
+ * @param {tf.Tensor} inputData - The input data tensor.
+ * @param {tf.Tensor} outputData - The output data tensor.
+ */
+async function trainModel(model, inputData, outputData) {
+    await model.fit(inputData, outputData, {
+        epochs: 20,
+        validationSplit: 0.2,
+        callbacks: [tf.callbacks.earlyStopping({ monitor: 'val_loss' })],
+    });
+    console.log('Model training complete.');
+}
+
+/**
+ * Predicts relevance of URLs using the trained model.
+ * @async
+ * @function predictRelevance
+ * @param {tf.Sequential} model - The trained neural network model.
+ * @param {string[]} urls - URLs to predict relevance for.
+ * @returns {Promise&lt;string[]>} A promise that resolves with an array of relevant URLs.
+ */
+async function predictRelevance(model, urls) {
+    const processedData = preprocessUrls(urls); // Implement based on your data
+    const predictions = await model.predict(processedData);
+    const relevantUrls = [];
+    predictions.arraySync().forEach((prediction, index) => {
+        if (prediction[1] > 0.5) { // Assuming binary classification
+            relevantUrls.push(urls[index]);
+        }
+    });
+    return relevantUrls;
+}
+
+/**
+ * Processes feedback data and retrains the model if necessary.
+ * @async
+ * @function processAndRetrain
+ */
+async function processAndRetrain() {
+    const feedbackItems = await Feedback.find({ processed: false });
+
+    if (feedbackItems.length > 0) {
+        // Update dataset with feedback
+        await updateDatasetWithFeedback(feedbackItems);
+
+        // Retrain model with updated dataset
+        await retrainModel();
+
+        // Mark feedback as processed
+        await Feedback.updateMany({ _id: { $in: feedbackItems.map(item => item._id) } }, { processed: true });
+        console.log(`Retrained model with ${feedbackItems.length} feedback items.`);
+    } else {
+        console.log('No new feedback to process.');
+    }
+}
+
+/**
+ * Updates the existing model with new data.
+ * @async
+ * @function updateModelWithNewData
+ * @param {tf.Sequential} model - The existing neural network model.
+ * @param {Object} newData - New data to update the model with.
+ */
+async function updateModelWithNewData(model, newData) {
+    const { inputData, outputData } = preprocessNewData(newData); // Preprocess new data
+    await model.fit(inputData, outputData, {
+        epochs: 5, // Adjust epochs for update
+        validationSplit: 0.2,
+    });
+    console.log('Model updated with new data.');
+}
+
+module.exports = { createModel, trainModel, predictRelevance, updateModelWithNewData };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Article.html">Article</a></li><li><a href="module-Embedding.html">Embedding</a></li><li><a href="module-FeedbackModel.html">FeedbackModel</a></li><li><a href="module-Logger.html">Logger</a></li><li><a href="module-UrlModel.html">UrlModel</a></li><li><a href="module-WebpageModel.html">WebpageModel</a></li><li><a href="module-db.html">db</a></li><li><a href="module-feedbackHandler.html">feedbackHandler</a></li><li><a href="module-feedbackProcessor.html">feedbackProcessor</a></li><li><a href="module-fetchFreshProxies.html">fetchFreshProxies</a></li><li><a href="module-index.html">index</a></li><li><a href="module-loadUse.html">loadUse</a></li><li><a href="module-modelTrainer.html">modelTrainer</a></li><li><a href="module-modelTrainingUtilities.html">modelTrainingUtilities</a></li><li><a href="module-proxyInit.html">proxyInit</a></li><li><a href="module-proxySchedule.html">proxySchedule</a></li><li><a href="module-queManager.html">queManager</a></li><li><a href="module-rotatingProxy.html">rotatingProxy</a></li><li><a href="module-scrapeAndTrain.html">scrapeAndTrain</a></li><li><a href="module-setupProxy.html">setupProxy</a></li><li><a href="module-throttler.html">throttler</a></li><li><a href="module-topicURLFetcher.html">topicURLFetcher</a></li><li><a href="module-userAgents.html">userAgents</a></li><li><a href="module-webpageSchema.html">webpageSchema</a></li></ul><h3>Global</h3><ul><li><a href="global.html#adjustScrapingQueue">adjustScrapingQueue</a></li><li><a href="global.html#analyzeContent">analyzeContent</a></li><li><a href="global.html#classifyFeedback">classifyFeedback</a></li><li><a href="global.html#getTargetTopicEmbeddings">getTargetTopicEmbeddings</a></li><li><a href="global.html#getUSEEmbeddings">getUSEEmbeddings</a></li><li><a href="global.html#loadMobileBertModel">loadMobileBertModel</a></li><li><a href="global.html#loadModel">loadModel</a></li><li><a href="global.html#loadUSEModel">loadUSEModel</a></li><li><a href="global.html#makeRealTimeDecisions">makeRealTimeDecisions</a></li><li><a href="global.html#mapIndexToCategory">mapIndexToCategory</a></li><li><a href="global.html#mobileBertModel">mobileBertModel</a></li><li><a href="global.html#model">model</a></li><li><a href="global.html#modelPath">modelPath</a></li><li><a href="global.html#storeEmbeddings">storeEmbeddings</a></li><li><a href="global.html#updateFeedbackClassification">updateFeedbackClassification</a></li><li><a href="global.html#useModel">useModel</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Fri Mar 22 2024 12:40:13 GMT-0700 (Pacific Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

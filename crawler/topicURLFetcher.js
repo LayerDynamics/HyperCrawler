@@ -1,6 +1,17 @@
 // topicURLFetcher.js
+/**
+ * @module topicURLFetcher
+ */
+
 const Url = require('./models/Url'); // Assuming a Mongoose model for URLs
 
+/**
+ * Fetches URLs for a given topic.
+ * @async
+ * @function fetchURLsForTopic
+ * @param {string} topic - The topic for which URLs are fetched.
+ * @returns {Promise<string[]>} A promise that resolves with an array of URLs.
+ */
 async function fetchURLsForTopic(topic) {
     try {
         // Fetch URLs tagged with the specified topic

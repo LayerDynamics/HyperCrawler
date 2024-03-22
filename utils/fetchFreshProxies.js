@@ -1,9 +1,19 @@
 // ./utils/fetchFreshProxies.js
+/**
+ * @module fetchFreshProxies
+ */
+
 const axios = require('axios');
 
 // Dynamically import node-fetch
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
+/**
+ * Fetches fresh proxies from various sources.
+ * @async
+ * @function fetchFreshProxies
+ * @returns {Promise<string[]>} A promise that resolves with an array of fresh proxies.
+ */
 async function fetchFreshProxies() {
     console.log('Fetching fresh proxies...');
     const proxySources = [
@@ -30,6 +40,14 @@ async function fetchFreshProxies() {
     }
 }
 
+/**
+ * Tests the given proxy against a set of URLs to check its validity.
+ * @async
+ * @function testProxy
+ * @param {Object} proxy - The proxy object containing the IP address and port.
+ * @param {string[]} [testUrls=['https://httpbin.org/ip']] - The URLs to use for testing the proxy.
+ * @returns {Promise<boolean>} A promise that resolves with a boolean indicating whether the proxy is valid.
+ */
 async function testProxy(proxy, testUrls = ['https://httpbin.org/ip']) {
     for (let url of testUrls) {
         try {
@@ -50,6 +68,13 @@ async function testProxy(proxy, testUrls = ['https://httpbin.org/ip']) {
     return true;
 }
 
+/**
+ * Validates an array of proxies by testing their validity.
+ * @async
+ * @function validateProxies
+ * @param {string[]} proxies - An array of proxies to validate.
+ * @returns {Promise<string[]>} A promise that resolves with an array of valid proxies.
+ */
 async function validateProxies(proxies) {
     // Consider including URLs you'll be scraping in testUrls for a thorough check
     const testUrls = ['https://httpbin.org/ip', 'https://example.com'];

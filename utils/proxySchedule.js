@@ -1,9 +1,15 @@
 // ./utils/proxySchedule.js
+/**
+ * @module proxySchedule
+ */
+
 const schedule = require('node-schedule');
 const { fetchFreshProxies, validateProxies } = require('./fetchFreshProxies');
 const { updateProxyList } = require('./rotatingProxy');
 
-// Scheduled task to refresh and validate proxies
+/**
+ * Scheduled task to refresh and validate proxies.
+ */
 schedule.scheduleJob('*/5 * * * *', async () => {
   console.log('Scheduled job to refresh and validate proxies started');
   try {
@@ -21,8 +27,3 @@ schedule.scheduleJob('*/5 * * * *', async () => {
     console.error('Scheduled job to refresh and validate proxies failed:', error);
   }
 });
-
-
-
-
-

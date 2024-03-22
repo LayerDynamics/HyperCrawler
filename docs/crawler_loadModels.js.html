@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: crawler/loadModels.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: crawler/loadModels.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// ./crawler/loadModels.js
+const tf = require('@tensorflow/tfjs-node');
+const use = require('@tensorflow-models/universal-sentence-encoder');
+
+/**
+ * Cached instance of the MobileBert model to prevent reloading.
+ * @type {?Object}
+ */
+let mobileBertModel;
+
+/**
+ * Cached instance of the Universal Sentence Encoder model to prevent reloading.
+ * @type {?Object}
+ */
+let useModel;
+
+/**
+ * Loads the MobileBert model asynchronously from the specified path, if not already loaded.
+ * This function caches the model instance globally to reuse for subsequent calls.
+ * 
+ * @returns {Promise&lt;Object>} The loaded MobileBert model.
+ */
+async function loadMobileBertModel() {
+    if (!mobileBertModel) {
+        // Adjust the path to where your TensorFlow.js model is stored.
+        const modelPath = 'file:../mobilebert/model.json'; 
+        mobileBertModel = await tf.loadLayersModel(modelPath);
+        console.log('MobileBert model loaded');
+    }
+    return mobileBertModel;
+}
+
+/**
+ * Loads the Universal Sentence Encoder model asynchronously, if not already loaded.
+ * This function caches the model instance globally to reuse for subsequent calls.
+ * 
+ * @returns {Promise&lt;Object>} The loaded Universal Sentence Encoder model.
+ */
+async function loadUSEModel() {
+    if (!useModel) {
+        useModel = await use.load();
+        console.log('Universal Sentence Encoder model loaded');
+    }
+    return useModel;
+}
+
+/**
+ * Generates embeddings for the given texts using the Universal Sentence Encoder model.
+ * 
+ * @param {string[]|string} texts - A single text string or an array of text strings to generate embeddings for.
+ * @returns {Promise&lt;tf.Tensor>} A promise that resolves to the tensor of embeddings.
+ */
+async function getUSEEmbeddings(texts) {
+    const model = await loadUSEModel();
+    const embeddings = await model.embed(texts);
+    return embeddings;
+}
+
+module.exports = { loadMobileBertModel, getUSEEmbeddings };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Article.html">Article</a></li><li><a href="module-Embedding.html">Embedding</a></li><li><a href="module-FeedbackModel.html">FeedbackModel</a></li><li><a href="module-Logger.html">Logger</a></li><li><a href="module-UrlModel.html">UrlModel</a></li><li><a href="module-WebpageModel.html">WebpageModel</a></li><li><a href="module-db.html">db</a></li><li><a href="module-feedbackHandler.html">feedbackHandler</a></li><li><a href="module-feedbackProcessor.html">feedbackProcessor</a></li><li><a href="module-fetchFreshProxies.html">fetchFreshProxies</a></li><li><a href="module-index.html">index</a></li><li><a href="module-loadUse.html">loadUse</a></li><li><a href="module-modelTrainer.html">modelTrainer</a></li><li><a href="module-modelTrainingUtilities.html">modelTrainingUtilities</a></li><li><a href="module-proxyInit.html">proxyInit</a></li><li><a href="module-proxySchedule.html">proxySchedule</a></li><li><a href="module-queManager.html">queManager</a></li><li><a href="module-rotatingProxy.html">rotatingProxy</a></li><li><a href="module-scrapeAndTrain.html">scrapeAndTrain</a></li><li><a href="module-setupProxy.html">setupProxy</a></li><li><a href="module-throttler.html">throttler</a></li><li><a href="module-topicURLFetcher.html">topicURLFetcher</a></li><li><a href="module-userAgents.html">userAgents</a></li><li><a href="module-webpageSchema.html">webpageSchema</a></li></ul><h3>Global</h3><ul><li><a href="global.html#adjustScrapingQueue">adjustScrapingQueue</a></li><li><a href="global.html#analyzeContent">analyzeContent</a></li><li><a href="global.html#classifyFeedback">classifyFeedback</a></li><li><a href="global.html#getTargetTopicEmbeddings">getTargetTopicEmbeddings</a></li><li><a href="global.html#getUSEEmbeddings">getUSEEmbeddings</a></li><li><a href="global.html#loadMobileBertModel">loadMobileBertModel</a></li><li><a href="global.html#loadModel">loadModel</a></li><li><a href="global.html#loadUSEModel">loadUSEModel</a></li><li><a href="global.html#makeRealTimeDecisions">makeRealTimeDecisions</a></li><li><a href="global.html#mapIndexToCategory">mapIndexToCategory</a></li><li><a href="global.html#mobileBertModel">mobileBertModel</a></li><li><a href="global.html#model">model</a></li><li><a href="global.html#modelPath">modelPath</a></li><li><a href="global.html#storeEmbeddings">storeEmbeddings</a></li><li><a href="global.html#updateFeedbackClassification">updateFeedbackClassification</a></li><li><a href="global.html#useModel">useModel</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Fri Mar 22 2024 12:40:13 GMT-0700 (Pacific Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

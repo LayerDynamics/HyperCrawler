@@ -1,10 +1,20 @@
-// scrapeAndTrain.js
+// ./crawler/scrapeAndTrain.js
+/**
+ * @module scrapeAndTrain
+ */
+
 const { scrapeDynamicContent } = require('./crawler.js'); // Adjust the path if necessary
 const { processScrapedData } = require('./data-prepare.js'); // Processes scraped data for model training
 const tf = require('@tensorflow/tfjs-node'); // or '@tensorflow/tfjs-node-gpu' for GPU support
 const { createModel, trainModel } = require('./modelTrainer.js'); // Make sure these functions are appropriately defined and exported
 const { getEmbeddings } = require('./loadUSE'); // Ensure this module is set up to load USE and provide embeddings
 
+/**
+ * Scrapes content from a given URL, processes it, and trains a model.
+ * @async
+ * @function scrapeAndTrain
+ * @param {string} url - The URL to scrape and train the model with.
+ */
 async function scrapeAndTrain(url) {
     try {
         // Step 1: Scrape content from the web
@@ -34,4 +44,3 @@ async function scrapeAndTrain(url) {
 }
 
 module.exports = { scrapeAndTrain };
-

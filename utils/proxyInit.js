@@ -1,8 +1,16 @@
 // ./utils/proxyInit.js
+/**
+ * @module proxyInit
+ */
+
 const { server, updateProxyList } = require('./rotatingProxy');
 const { fetchFreshProxies, validateProxies } = require('./fetchFreshProxies');
 const schedule = require('node-schedule');
 
+/**
+ * Initializes the proxy server and sets up regular proxy list refreshing.
+ * @function initializeProxies
+ */
 async function initializeProxies() {
   try {
     // Fetch and validate proxies at startup

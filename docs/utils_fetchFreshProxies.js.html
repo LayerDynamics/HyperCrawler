@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: utils/fetchFreshProxies.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: utils/fetchFreshProxies.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// ./utils/fetchFreshProxies.js
+/**
+ * @module fetchFreshProxies
+ */
+
+const axios = require('axios');
+
+// Dynamically import node-fetch
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
+/**
+ * Fetches fresh proxies from various sources.
+ * @async
+ * @function fetchFreshProxies
+ * @returns {Promise&lt;string[]>} A promise that resolves with an array of fresh proxies.
+ */
+async function fetchFreshProxies() {
+    console.log('Fetching fresh proxies...');
+    const proxySources = [
+        'https://api.proxyscrape.com/v3/free-proxy-list/get?request=displayproxies',
+        'https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/all/data.json',
+    ];
+
+    const proxyList = [];
+
+    try {
+        // Fetching from ProxyScrape API
+        const response1 = await (await fetch(proxySources[0])).text();
+        proxyList.push(...response1.split('\n').filter(proxy => proxy.trim()));
+
+        // Fetching from GitHub
+        const response2 = await (await fetch(proxySources[1])).json();
+        proxyList.push(...response2.map(proxy => `${proxy.ip}:${proxy.port}`));
+
+        console.log(`Fetched ${proxyList.length} proxies`);
+        return proxyList;
+    } catch (error) {
+        console.error('Failed to fetch proxies:', error);
+        return [];
+    }
+}
+
+/**
+ * Tests the given proxy against a set of URLs to check its validity.
+ * @async
+ * @function testProxy
+ * @param {Object} proxy - The proxy object containing the IP address and port.
+ * @param {string[]} [testUrls=['https://httpbin.org/ip']] - The URLs to use for testing the proxy.
+ * @returns {Promise&lt;boolean>} A promise that resolves with a boolean indicating whether the proxy is valid.
+ */
+async function testProxy(proxy, testUrls = ['https://httpbin.org/ip']) {
+    for (let url of testUrls) {
+        try {
+            await axios.get(url, {
+                proxy: {
+                    host: proxy.ip,
+                    port: parseInt(proxy.port),
+                },
+                timeout: 5000,
+            });
+            // Proxy works for this URL, continue checking if necessary
+        } catch (error) {
+            // Proxy failed for this URL, it's either down or banned
+            return false;
+        }
+    }
+    // Passed all checks
+    return true;
+}
+
+/**
+ * Validates an array of proxies by testing their validity.
+ * @async
+ * @function validateProxies
+ * @param {string[]} proxies - An array of proxies to validate.
+ * @returns {Promise&lt;string[]>} A promise that resolves with an array of valid proxies.
+ */
+async function validateProxies(proxies) {
+    // Consider including URLs you'll be scraping in testUrls for a thorough check
+    const testUrls = ['https://httpbin.org/ip', 'https://example.com'];
+    const validationPromises = proxies.map(proxyString => {
+        const [ip, port] = proxyString.split(':');
+        return testProxy({ ip, port }, testUrls);
+    });
+
+    const validationResults = await Promise.all(validationPromises);
+    return proxies.filter((_, index) => validationResults[index]);
+}
+
+module.exports = { fetchFreshProxies, validateProxies };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Article.html">Article</a></li><li><a href="module-Embedding.html">Embedding</a></li><li><a href="module-FeedbackModel.html">FeedbackModel</a></li><li><a href="module-Logger.html">Logger</a></li><li><a href="module-UrlModel.html">UrlModel</a></li><li><a href="module-WebpageModel.html">WebpageModel</a></li><li><a href="module-db.html">db</a></li><li><a href="module-feedbackHandler.html">feedbackHandler</a></li><li><a href="module-feedbackProcessor.html">feedbackProcessor</a></li><li><a href="module-fetchFreshProxies.html">fetchFreshProxies</a></li><li><a href="module-index.html">index</a></li><li><a href="module-loadUse.html">loadUse</a></li><li><a href="module-modelTrainer.html">modelTrainer</a></li><li><a href="module-modelTrainingUtilities.html">modelTrainingUtilities</a></li><li><a href="module-proxyInit.html">proxyInit</a></li><li><a href="module-proxySchedule.html">proxySchedule</a></li><li><a href="module-queManager.html">queManager</a></li><li><a href="module-rotatingProxy.html">rotatingProxy</a></li><li><a href="module-scrapeAndTrain.html">scrapeAndTrain</a></li><li><a href="module-setupProxy.html">setupProxy</a></li><li><a href="module-throttler.html">throttler</a></li><li><a href="module-topicURLFetcher.html">topicURLFetcher</a></li><li><a href="module-userAgents.html">userAgents</a></li><li><a href="module-webpageSchema.html">webpageSchema</a></li></ul><h3>Global</h3><ul><li><a href="global.html#adjustScrapingQueue">adjustScrapingQueue</a></li><li><a href="global.html#analyzeContent">analyzeContent</a></li><li><a href="global.html#classifyFeedback">classifyFeedback</a></li><li><a href="global.html#getTargetTopicEmbeddings">getTargetTopicEmbeddings</a></li><li><a href="global.html#getUSEEmbeddings">getUSEEmbeddings</a></li><li><a href="global.html#loadMobileBertModel">loadMobileBertModel</a></li><li><a href="global.html#loadModel">loadModel</a></li><li><a href="global.html#loadUSEModel">loadUSEModel</a></li><li><a href="global.html#makeRealTimeDecisions">makeRealTimeDecisions</a></li><li><a href="global.html#mapIndexToCategory">mapIndexToCategory</a></li><li><a href="global.html#mobileBertModel">mobileBertModel</a></li><li><a href="global.html#model">model</a></li><li><a href="global.html#modelPath">modelPath</a></li><li><a href="global.html#storeEmbeddings">storeEmbeddings</a></li><li><a href="global.html#updateFeedbackClassification">updateFeedbackClassification</a></li><li><a href="global.html#useModel">useModel</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Fri Mar 22 2024 12:40:13 GMT-0700 (Pacific Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

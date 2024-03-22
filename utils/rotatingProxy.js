@@ -1,10 +1,34 @@
 // ./utils/rotatingProxy.js
+/**
+ * @module rotatingProxy
+ */
+
 const ProxyChain = require('proxy-chain');
 
+/**
+ * Array containing the global proxy list.
+ * @type {string[]}
+ */
 let globalProxyList = [];
-let globalProxyStats = {}; // Proxy stats
-let blacklist = new Set(); // Add problematic proxies here
-// Update proxyStats after each request in rotatingProxy.js
+
+/**
+ * Object containing statistics for each proxy.
+ * @type {Object}
+ */
+let globalProxyStats = {};
+
+/**
+ * Set containing blacklisted proxies.
+ * @type {Set<string>}
+ */
+let blacklist = new Set();
+
+/**
+ * Updates the statistics for a proxy based on request success and response time.
+ * @param {string} proxyUrl - The URL of the proxy.
+ * @param {boolean} success - Indicates whether the request was successful.
+ * @param {number} responseTime - The response time for the request.
+ */
 const updateProxyStats = (proxyUrl, success, responseTime) => {
     const stats = globalProxyStats[proxyUrl] || { successCount: 0, failureCount: 0, totalResponseTime: 0, averageResponseTime: 0 };
     if (success) {
@@ -17,17 +41,26 @@ const updateProxyStats = (proxyUrl, success, responseTime) => {
     globalProxyStats[proxyUrl] = stats;
 };
 
-// Use this function to select a proxy based on performance
+/**
+ * Selects the best proxy based on performance.
+ */
 const selectBestProxy = () => {
     // Logic to select proxy with the best success rate and response time
 };
 
-
+/**
+ * Updates the global proxy list with the provided new list.
+ * @param {string[]} newList - The new list of proxy URLs.
+ */
 const updateProxyList = (newList) => {
     globalProxyList = newList.filter((url) => url.startsWith('http')); // Ensuring only valid HTTP(S) proxies are kept
     console.log(`Proxy list updated with ${globalProxyList.length} entries.`);
 };
 
+/**
+ * Retrieves a random proxy URL from the global proxy list, excluding blacklisted proxies.
+ * @returns {string|null} A random proxy URL, or null if no valid proxy is available.
+ */
 const getRandomProxyUrl = () => {
     // Filter out blacklisted proxies
     const availableProxies = globalProxyList.filter(proxy => !blacklist.has(proxy));
@@ -41,6 +74,10 @@ const getRandomProxyUrl = () => {
     return availableProxies[randomIndex];
 };
 
+/**
+ * Proxy server instance.
+ * @type {ProxyChain.Server}
+ */
 const server = new ProxyChain.Server({
     port: 8000,
     prepareRequestFunction: async ({ request }) => {

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: utils/rotatingProxy.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: utils/rotatingProxy.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// ./utils/rotatingProxy.js
+/**
+ * @module rotatingProxy
+ */
+
+const ProxyChain = require('proxy-chain');
+
+/**
+ * Array containing the global proxy list.
+ * @type {string[]}
+ */
+let globalProxyList = [];
+
+/**
+ * Object containing statistics for each proxy.
+ * @type {Object}
+ */
+let globalProxyStats = {};
+
+/**
+ * Set containing blacklisted proxies.
+ * @type {Set&lt;string>}
+ */
+let blacklist = new Set();
+
+/**
+ * Updates the statistics for a proxy based on request success and response time.
+ * @param {string} proxyUrl - The URL of the proxy.
+ * @param {boolean} success - Indicates whether the request was successful.
+ * @param {number} responseTime - The response time for the request.
+ */
+const updateProxyStats = (proxyUrl, success, responseTime) => {
+    const stats = globalProxyStats[proxyUrl] || { successCount: 0, failureCount: 0, totalResponseTime: 0, averageResponseTime: 0 };
+    if (success) {
+        stats.successCount += 1;
+    } else {
+        stats.failureCount += 1;
+    }
+    stats.totalResponseTime += responseTime;
+    stats.averageResponseTime = stats.totalResponseTime / (stats.successCount + stats.failureCount);
+    globalProxyStats[proxyUrl] = stats;
+};
+
+/**
+ * Selects the best proxy based on performance.
+ */
+const selectBestProxy = () => {
+    // Logic to select proxy with the best success rate and response time
+};
+
+/**
+ * Updates the global proxy list with the provided new list.
+ * @param {string[]} newList - The new list of proxy URLs.
+ */
+const updateProxyList = (newList) => {
+    globalProxyList = newList.filter((url) => url.startsWith('http')); // Ensuring only valid HTTP(S) proxies are kept
+    console.log(`Proxy list updated with ${globalProxyList.length} entries.`);
+};
+
+/**
+ * Retrieves a random proxy URL from the global proxy list, excluding blacklisted proxies.
+ * @returns {string|null} A random proxy URL, or null if no valid proxy is available.
+ */
+const getRandomProxyUrl = () => {
+    // Filter out blacklisted proxies
+    const availableProxies = globalProxyList.filter(proxy => !blacklist.has(proxy));
+
+    if (availableProxies.length === 0) {
+        console.warn("Available proxy list is empty. No proxy will be used for this request.");
+        return null;
+    }
+
+    const randomIndex = Math.floor(Math.random() * availableProxies.length);
+    return availableProxies[randomIndex];
+};
+
+/**
+ * Proxy server instance.
+ * @type {ProxyChain.Server}
+ */
+const server = new ProxyChain.Server({
+    port: 8000,
+    prepareRequestFunction: async ({ request }) => {
+        const proxyUrl = getRandomProxyUrl();
+        console.log(`Routing request for ${request.url} through proxy: ${proxyUrl || 'direct connection'}`);
+        return {
+            upstreamProxyUrl: proxyUrl,
+            requestAuthentication: false,
+            failMsg: 'Failed to connect through proxy',
+        };
+    },
+    verbose: true, // Enable verbose logging for debugging purposes
+});
+
+server.listen(() => console.log(`Proxy server listening on port ${server.port}.`));
+
+process.on('SIGINT', async () => {
+    console.log('Shutting down proxy server...');
+    await server.close();
+    console.log('Proxy server successfully shut down.');
+});
+
+module.exports = { server, updateProxyList, getRandomProxyUrl };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Article.html">Article</a></li><li><a href="module-Embedding.html">Embedding</a></li><li><a href="module-FeedbackModel.html">FeedbackModel</a></li><li><a href="module-Logger.html">Logger</a></li><li><a href="module-UrlModel.html">UrlModel</a></li><li><a href="module-WebpageModel.html">WebpageModel</a></li><li><a href="module-db.html">db</a></li><li><a href="module-feedbackHandler.html">feedbackHandler</a></li><li><a href="module-feedbackProcessor.html">feedbackProcessor</a></li><li><a href="module-fetchFreshProxies.html">fetchFreshProxies</a></li><li><a href="module-index.html">index</a></li><li><a href="module-loadUse.html">loadUse</a></li><li><a href="module-modelTrainer.html">modelTrainer</a></li><li><a href="module-modelTrainingUtilities.html">modelTrainingUtilities</a></li><li><a href="module-proxyInit.html">proxyInit</a></li><li><a href="module-proxySchedule.html">proxySchedule</a></li><li><a href="module-queManager.html">queManager</a></li><li><a href="module-rotatingProxy.html">rotatingProxy</a></li><li><a href="module-scrapeAndTrain.html">scrapeAndTrain</a></li><li><a href="module-setupProxy.html">setupProxy</a></li><li><a href="module-throttler.html">throttler</a></li><li><a href="module-topicURLFetcher.html">topicURLFetcher</a></li><li><a href="module-userAgents.html">userAgents</a></li><li><a href="module-webpageSchema.html">webpageSchema</a></li></ul><h3>Global</h3><ul><li><a href="global.html#adjustScrapingQueue">adjustScrapingQueue</a></li><li><a href="global.html#analyzeContent">analyzeContent</a></li><li><a href="global.html#classifyFeedback">classifyFeedback</a></li><li><a href="global.html#getTargetTopicEmbeddings">getTargetTopicEmbeddings</a></li><li><a href="global.html#getUSEEmbeddings">getUSEEmbeddings</a></li><li><a href="global.html#loadMobileBertModel">loadMobileBertModel</a></li><li><a href="global.html#loadModel">loadModel</a></li><li><a href="global.html#loadUSEModel">loadUSEModel</a></li><li><a href="global.html#makeRealTimeDecisions">makeRealTimeDecisions</a></li><li><a href="global.html#mapIndexToCategory">mapIndexToCategory</a></li><li><a href="global.html#mobileBertModel">mobileBertModel</a></li><li><a href="global.html#model">model</a></li><li><a href="global.html#modelPath">modelPath</a></li><li><a href="global.html#storeEmbeddings">storeEmbeddings</a></li><li><a href="global.html#updateFeedbackClassification">updateFeedbackClassification</a></li><li><a href="global.html#useModel">useModel</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Fri Mar 22 2024 12:40:13 GMT-0700 (Pacific Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

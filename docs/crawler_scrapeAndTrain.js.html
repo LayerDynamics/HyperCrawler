@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: crawler/scrapeAndTrain.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: crawler/scrapeAndTrain.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// ./crawler/scrapeAndTrain.js
+/**
+ * @module scrapeAndTrain
+ */
+
+const { scrapeDynamicContent } = require('./crawler.js'); // Adjust the path if necessary
+const { processScrapedData } = require('./data-prepare.js'); // Processes scraped data for model training
+const tf = require('@tensorflow/tfjs-node'); // or '@tensorflow/tfjs-node-gpu' for GPU support
+const { createModel, trainModel } = require('./modelTrainer.js'); // Make sure these functions are appropriately defined and exported
+const { getEmbeddings } = require('./loadUSE'); // Ensure this module is set up to load USE and provide embeddings
+
+/**
+ * Scrapes content from a given URL, processes it, and trains a model.
+ * @async
+ * @function scrapeAndTrain
+ * @param {string} url - The URL to scrape and train the model with.
+ */
+async function scrapeAndTrain(url) {
+    try {
+        // Step 1: Scrape content from the web
+        const scrapedData = await scrapeDynamicContent(url);
+
+        // Optional: Process the scraped data to format it for training
+        const processedData = await processScrapedData(scrapedData);
+
+        // Step 2: Analyze the titles (or any relevant text) extracted from the scraped content using USE
+        const textsToAnalyze = processedData.map(data => data.title); // Adjust this to target the specific text you're interested in
+        const embeddings = await getEmbeddings(textsToAnalyze); // This will return a tensor
+
+        // Step 3: Prepare data for training
+        // If you're using embeddings directly, ensure your processScrapedData prepares labels accordingly
+        const inputTensor = embeddings; // Using embeddings directly as input to the model
+        const outputTensor = tf.tensor2d(processedData.map(data => data.label)); // Adjust this based on how your labels are structured
+
+        // Step 4: Create and train the model
+        // Ensure the model's input layer is compatible with the shape of USE embeddings
+        const model = createModel(inputTensor.shape[1]); // inputTensor.shape[1] gives the size of the embedding vectors
+        await trainModel(model, inputTensor, outputTensor);
+
+        console.log('Model trained successfully with scraped data.');
+    } catch (error) {
+        console.error('Failed to scrape and train:', error);
+    }
+}
+
+module.exports = { scrapeAndTrain };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Article.html">Article</a></li><li><a href="module-Embedding.html">Embedding</a></li><li><a href="module-FeedbackModel.html">FeedbackModel</a></li><li><a href="module-Logger.html">Logger</a></li><li><a href="module-UrlModel.html">UrlModel</a></li><li><a href="module-WebpageModel.html">WebpageModel</a></li><li><a href="module-db.html">db</a></li><li><a href="module-feedbackHandler.html">feedbackHandler</a></li><li><a href="module-feedbackProcessor.html">feedbackProcessor</a></li><li><a href="module-fetchFreshProxies.html">fetchFreshProxies</a></li><li><a href="module-index.html">index</a></li><li><a href="module-loadUse.html">loadUse</a></li><li><a href="module-modelTrainer.html">modelTrainer</a></li><li><a href="module-modelTrainingUtilities.html">modelTrainingUtilities</a></li><li><a href="module-proxyInit.html">proxyInit</a></li><li><a href="module-proxySchedule.html">proxySchedule</a></li><li><a href="module-queManager.html">queManager</a></li><li><a href="module-rotatingProxy.html">rotatingProxy</a></li><li><a href="module-scrapeAndTrain.html">scrapeAndTrain</a></li><li><a href="module-setupProxy.html">setupProxy</a></li><li><a href="module-throttler.html">throttler</a></li><li><a href="module-topicURLFetcher.html">topicURLFetcher</a></li><li><a href="module-userAgents.html">userAgents</a></li><li><a href="module-webpageSchema.html">webpageSchema</a></li></ul><h3>Global</h3><ul><li><a href="global.html#adjustScrapingQueue">adjustScrapingQueue</a></li><li><a href="global.html#analyzeContent">analyzeContent</a></li><li><a href="global.html#classifyFeedback">classifyFeedback</a></li><li><a href="global.html#getTargetTopicEmbeddings">getTargetTopicEmbeddings</a></li><li><a href="global.html#getUSEEmbeddings">getUSEEmbeddings</a></li><li><a href="global.html#loadMobileBertModel">loadMobileBertModel</a></li><li><a href="global.html#loadModel">loadModel</a></li><li><a href="global.html#loadUSEModel">loadUSEModel</a></li><li><a href="global.html#makeRealTimeDecisions">makeRealTimeDecisions</a></li><li><a href="global.html#mapIndexToCategory">mapIndexToCategory</a></li><li><a href="global.html#mobileBertModel">mobileBertModel</a></li><li><a href="global.html#model">model</a></li><li><a href="global.html#modelPath">modelPath</a></li><li><a href="global.html#storeEmbeddings">storeEmbeddings</a></li><li><a href="global.html#updateFeedbackClassification">updateFeedbackClassification</a></li><li><a href="global.html#useModel">useModel</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Fri Mar 22 2024 12:40:13 GMT-0700 (Pacific Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

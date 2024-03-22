@@ -1,15 +1,24 @@
+// ./crawler/feedbackClassifier.js
 const tf = require('@tensorflow/tfjs-node');
 const { preprocessText } = require('./data-prepare');
 const Feedback = require('./models/feedbackModel'); // Ensure this path is correct
 const Webpage = require('./models/Webpage'); // Ensure this path is correct
 
-// Update this to the path where your TensorFlow.js model is stored
-const modelPath = 'file://path/to/your/model/model.json';
+/**
+ * Path to the TensorFlow.js model stored locally.
+ * @type {string}
+ */
+const modelPath = '../mobilebert/model.json';
 
-// Globally initialize the model variable
+/**
+ * The TensorFlow.js model, globally initialized.
+ * @type {null|Object}
+ */
 let model;
 
-// Asynchronously load the model from the specified path
+/**
+ * Asynchronously loads the TensorFlow.js model from a specified path.
+ */
 const loadModel = async () => {
     try {
         model = await tf.loadLayersModel(modelPath);
@@ -19,58 +28,63 @@ const loadModel = async () => {
     }
 };
 
-// Function to preprocess and classify feedback text
+/**
+ * Preprocesses and classifies feedback text using the loaded model.
+ * @param {string} feedbackText - The text to classify.
+ * @returns {Promise<{category: string, needsReview: boolean}|null>} The classification result or null in case of an error.
+ */
 async function classifyFeedback(feedbackText) {
-    // Preprocess the text (implementation provided in your data-prepare module)
     const processedText = preprocessText(feedbackText);
-
-    // Convert processed text to tensor (the following is a simplified example, you need to match this with your model's requirements)
     const inputTensor = tf.tensor2d([processedText.split(' ').map(word => word.length)], [1, processedText.length]);
 
     try {
-        // Predict the category using the model
         const prediction = await model.predict(inputTensor).data();
         const predictedClassIndex = prediction.indexOf(Math.max(...prediction));
         const category = mapIndexToCategory(predictedClassIndex);
-
         return {
             category,
-            needsReview: category === 'Negative', // Example logic, adjust as needed
+            needsReview: category === 'Negative',
         };
     } catch (error) {
         console.error('Error during model prediction:', error);
-        return null; // Handle prediction errors gracefully
+        return null;
     }
 }
 
-// Example mapping function, adjust according to your model's training categories
+/**
+ * Maps the index of a prediction to its corresponding category.
+ * @param {number} index - The index of the predicted category.
+ * @returns {string} The name of the category.
+ */
 const mapIndexToCategory = (index) => {
     const categories = ['Positive', 'Negative', 'Neutral'];
     return categories[index] || 'Unknown';
 };
 
-// Function to update feedback items based on classification results
+/**
+ * Updates feedback items in the database based on classification results.
+ * @param {Array<Object>} feedbackItems - The feedback items to classify and update.
+ */
 const updateFeedbackClassification = async (feedbackItems) => {
     for (const feedback of feedbackItems) {
         const classificationResult = await classifyFeedback(feedback.userFeedback);
 
-        if (!classificationResult) continue; // Skip if classification failed
+        if (!classificationResult) continue;
 
         if (classificationResult.needsReview) {
             await flagForReview(feedback.url);
         } else {
             if (!feedback.correctPrediction) {
-                // Handle incorrect predictions
                 const correctedData = parseUserFeedback(feedback.userFeedback);
                 await updateDatasetEntry(feedback.url, correctedData);
             } else {
-                // Optionally handle correct predictions
                 await increaseConfidence(feedback.url);
             }
         }
     }
     console.log(`Processed ${feedbackItems.length} feedback items.`);
 };
+
 
 // Placeholder function implementations. You need to define these based on your application's requirements
 async function flagForReview(url) {
